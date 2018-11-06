@@ -70,7 +70,7 @@ def main(args):
     os.chdir(os.path.expanduser('~'))
     # List each application
     for app_name in sorted(apps_to_backup):
-        app_files = list_backupable_app(
+        app_files = list_backupable_files(
             files=app_db.get_files(app_name),
             config=config,
             file_filter=file_filter
@@ -179,7 +179,7 @@ class ApplicationsDatabase(object):
         return app_names
 
 
-def list_backupable_app(files, config, file_filter):
+def list_backupable_files(files, config, file_filter):
     """
     Backup the application config files.
     """
