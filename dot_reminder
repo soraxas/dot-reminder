@@ -1,0 +1,48 @@
+#!/usr/bin/python
+
+import os, sys
+import argparse
+import main
+
+
+def handle_args():
+    parser = argparse.ArgumentParser(
+        description="Inform you what files you can potentially backup.")
+    parser.add_argument(
+        "--config",
+        "-c",
+        default="viewer.cfg",
+        help=
+        "Configuration file to define the behaviour of this program",  # noqa
+        metavar="CONFIG_FILE")
+    parser.add_argument(
+        "--minimal",
+        "-m",
+        action='store_true',
+        default=False,
+        help="Minimal in verbosity. If set, it will only output directory that "
+        "are backup-able. It overrides verbosity option.")
+    parser.add_argument(
+        "--verbosity",
+        "-v",
+        action='count',
+        default=0,
+        help="Verbosity of the program. "
+        "Lvl 0: Informs when there are files backup-able. "
+        "Lvl 1: Previous, plus when the file exists (already backup-ed). "
+        "Lvl 2: Previous, plus even when the file does not exists. "
+        "Lvl 3: Previous, plus all other instances (includes apps that you might not installed)"
+    )
+    parser.add_argument(
+        "--debug",
+        action='store_true',
+        default=False,
+        help="Enable extensive logging.")
+
+    return vars(parser.parse_args())
+
+
+if __name__ == '__main__':
+    os.chdir(sys.path[0])
+    args = handle_args()
+    main.main(args)
