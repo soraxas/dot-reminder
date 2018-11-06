@@ -2,8 +2,8 @@
 
 import os, sys
 import argparse
+import subprocess
 import main
-
 
 def handle_args():
     parser = argparse.ArgumentParser(
@@ -42,7 +42,31 @@ def handle_args():
     return vars(parser.parse_args())
 
 
+def mackup_configs_download_helper():
+    """Check and help to download basic config files from mackup repo."""
+    if os.path.exists('applications'):
+        return
+    print('Default configs from mackup not found.')
+    prompt = input("Do you want to automatically download them? (Y/n) ")
+    if prompt.lower() == 'y' or prompt == '':
+        import shutil
+
+        download_url = "https://github.com/lra/mackup/archive/master.tar.gz"
+        tarball_name = 'master.tar.gz'
+        mackup_repo_directory = 'mackup-master'
+        # download master tarball
+        subprocess.check_output(['wget', download_url])
+
+        subprocess.check_output(['tar', 'xzf', tarball_name, mackup_repo_directory])
+        shutil.move(os.path.join('mackup-master', 'mackup', 'applications'), os.getcwd())
+
+        # cleanup
+        shutil.rmtree(mackup_repo_directory)
+        os.remove(tarball_name)
+
+
 if __name__ == '__main__':
     os.chdir(sys.path[0])
+    mackup_configs_download_helper()
     args = handle_args()
     main.main(args)
