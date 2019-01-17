@@ -3,7 +3,7 @@ import subprocess
 from helpers import *
 
 
-class BaseFilter:
+class BaseFilter(object):
     """Basic filter class that does not filter out anythin."""
 
     def __init__(self, **kwargs):
@@ -20,7 +20,7 @@ class CommandFilter(BaseFilter):
     filter out backuped files."""
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super(CommandFilter, self).__init__(**kwargs)
         out = subprocess.check_output(self.config.command.split(),
                                       cwd=os.path.expanduser('~'))
         self.tracked = bytes.decode(out).split()

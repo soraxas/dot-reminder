@@ -47,6 +47,10 @@ def mackup_configs_download_helper():
     if os.path.exists('applications'):
         return
     print('Default configs from mackup not found.')
+    if sys.version_info < (3, 0):  # special handling for python2
+        input = raw_input
+    else:
+        from builtins import input
     prompt = input("Do you want to automatically download them? (Y/n) ")
     if prompt.lower() == 'y' or prompt == '':
         import shutil
