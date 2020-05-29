@@ -1,1 +1,4 @@
 applications/
+viewer.cfg
+
+**/*.pyc
