@@ -6,14 +6,16 @@ import subprocess
 import main
 
 def handle_args():
+    import xdg.BaseDirectory
+    config_default = "{}/dot_reminder.cfg".format(xdg.BaseDirectory.xdg_config_home)
     parser = argparse.ArgumentParser(
         description="Inform you what files you can potentially backup.")
     parser.add_argument(
         "--config",
         "-c",
-        default="viewer.cfg",
+        default=config_default,
         help=
-        "Configuration file to define the behaviour of this program",  # noqa
+        "Configuration file to define the behaviour of this program. [default: {}]".format(config_default),
         metavar="CONFIG_FILE")
     parser.add_argument(
         "--minimal",
@@ -62,15 +64,46 @@ def mackup_configs_download_helper():
         subprocess.check_output(['wget', download_url])
 
         subprocess.check_output(['tar', 'xzf', tarball_name, mackup_repo_directory])
-        shutil.move(os.path.join('mackup-master', 'mackup', 'applications'), os.getcwd())
+        shutil.move(os.path.join(mackup_repo_directory, 'mackup', 'applications'), os.getcwd())
 
         # cleanup
         shutil.rmtree(mackup_repo_directory)
         os.remove(tarball_name)
 
 
+def xdg_util_download_helper():
+    """Check and help to download xdg python module."""
+    try:
+        import xdg
+        return
+    except ModuleNotFoundError:
+        pass
+    print('Python module "xdg" not found (https://github.com/takluyver/pyxdg).')
+    if sys.version_info < (3, 0):  # special handling for python2
+        input = raw_input
+    else:
+        from builtins import input
+    prompt = input("Do you want to automatically download the module locally? (Y/n) ")
+    if prompt.lower() == 'y' or prompt == '':
+        import shutil
+
+        download_url = "https://github.com/takluyver/pyxdg/archive/master.tar.gz"
+        tarball_name = 'master.tar.gz'
+        xdg_repo_directory = 'pyxdg-master'
+        # download master tarball
+        subprocess.check_output(['wget', download_url])
+
+        subprocess.check_output(['tar', 'xzf', tarball_name, xdg_repo_directory])
+        shutil.move(os.path.join(xdg_repo_directory, 'xdg'), os.getcwd())
+
+        # cleanup
+        shutil.rmtree(xdg_repo_directory)
+        os.remove(tarball_name)
+
+
 if __name__ == '__main__':
     os.chdir(sys.path[0])
     mackup_configs_download_helper()
+    xdg_util_download_helper()
     args = handle_args()
     main.main(args)

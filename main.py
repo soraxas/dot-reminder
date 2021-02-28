@@ -27,6 +27,10 @@ def main(args):
 
     configParse = configparser.SafeConfigParser(allow_no_value=True)
     configParse.optionxform = str
+    
+    if not os.path.exists(args['config']):
+        import shutil
+        shutil.copy('dot_reminder.cfg.example', args['config'])
 
     if configParse.read(args['config']):
         config.apps_dir = configParse.get('core', 'APPS_DIR')
