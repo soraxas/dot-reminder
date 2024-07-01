@@ -11,6 +11,12 @@ except ImportError:
     import ConfigParser as configparser
 
 
+try:
+    _ConfigParser = configparser.SafeConfigParser
+except AttributeError:
+    _ConfigParser = configparser.RawConfigParser
+
+
 def main(args):
     """Main function."""
     config = Configuration()
@@ -25,9 +31,9 @@ def main(args):
 
     config.backuped_files = backuped_files
 
-    configParse = configparser.SafeConfigParser(allow_no_value=True)
+    configParse = _ConfigParser(allow_no_value=True)
     configParse.optionxform = str
-    
+
     if not os.path.exists(args['config']):
         import shutil
         shutil.copy('dot_reminder.cfg.example', args['config'])
@@ -124,7 +130,7 @@ class ApplicationsDatabase(object):
         # Build the dict that will contain the properties of each application
         self.apps = dict()
         for config_file in set(config_files):
-            config = configparser.SafeConfigParser(allow_no_value=True)
+            config = _ConfigParser(allow_no_value=True)
             # Needed to not lowercase the configuration_files in the ini files
             config.optionxform = str
             if config.read(config_file):
