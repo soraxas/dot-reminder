@@ -22,12 +22,12 @@ def main(args):
     config = Configuration()
     config.verbosity = args["verbosity"]
 
-    backuped_files = []
+    backuped_files = set()
     # try to read from stdin
     if not os.isatty(0):
         # reading from terminal
         for line in sys.stdin:
-            backuped_files.append(line.rstrip())
+            backuped_files.add(line.rstrip())
 
     config.backuped_files = backuped_files
 
@@ -214,25 +214,33 @@ def list_backupable_files(files, config, file_filter):
     """
     # For each file used by the application
     backupable_files = []
-    for _filename in list(files):
-        for filename in glob.glob(_filename):
-            # print(filename)
+    for potential_file in list(files):
+        # use glob, which would only list files that actually exists.
+        for filename_pattern in glob.glob(potential_file):
+            # check to see if the file is a directory or file
+            # if it is a directory, expand it.
+            files_on_system = (
+                [filename_pattern]
+                if os.path.isfile(filename_pattern)
+                else list(glob.glob(f"{filename_pattern}/**"))
+            )
 
-            # ignore the user defined files
-            if any(re.match(ignore, filename) for ignore in config.ignores):
-                continue
+            for filename in files_on_system:
+                # ignore the user defined files
+                if any(re.match(ignore, filename) for ignore in config.ignores):
+                    continue
 
-            status = None
-            # check for backuped files given from pipe:
-            if filename in config.backuped_files:
-                status = Status.EXISTS
+                status = None
+                # check for backuped files given from pipe:
+                if filename in config.backuped_files:
+                    status = Status.EXISTS
 
-            # If the file exists and is not already a link pointing to Original file
-            if status is None:
-                status = file_filter.get_status(filename)
+                # If the file exists and is not already a link pointing to Original file
+                if status is None:
+                    status = file_filter.get_status(filename)
 
-            if status is None:
-                status = Status.NOT_EXISTS
+                if status is None:
+                    status = Status.NOT_EXISTS
 
-            backupable_files.append([status, filename])
+                backupable_files.append([status, filename])
     return backupable_files
