@@ -20,7 +20,7 @@ except AttributeError:
 def main(args):
     """Main function."""
     config = Configuration()
-    config.verbosity = args['verbosity']
+    config.verbosity = args["verbosity"]
 
     backuped_files = []
     # try to read from stdin
@@ -34,28 +34,29 @@ def main(args):
     configParse = _ConfigParser(allow_no_value=True)
     configParse.optionxform = str
 
-    if not os.path.exists(args['config']):
+    if not os.path.exists(args["config"]):
         import shutil
-        shutil.copy('dot_reminder.cfg.example', args['config'])
 
-    if configParse.read(args['config']):
-        config.apps_dir = configParse.get('core', 'APPS_DIR')
+        shutil.copy("dot_reminder.cfg.example", args["config"])
 
-        if configParse.has_option('core', 'METHOD'):
-            config.method = configParse.get('core', 'METHOD')
+    if configParse.read(args["config"]):
+        config.apps_dir = configParse.get("core", "APPS_DIR")
 
-        if config.method == 'symlink':
+        if configParse.has_option("core", "METHOD"):
+            config.method = configParse.get("core", "METHOD")
+
+        if config.method == "symlink":
             # must provide a command config
-            config.symlink_dir = configParse.get('core', 'SYMLINK_DIR')
-        elif config.method == 'command':
+            config.symlink_dir = configParse.get("core", "SYMLINK_DIR")
+        elif config.method == "command":
             # must provide a command config
-            config.command = configParse.get('core', 'COMMAND')
+            config.command = configParse.get("core", "COMMAND")
 
-        if configParse.has_section('ignore_paths'):
-            for path in configParse.options('ignore_paths'):
+        if configParse.has_section("ignore_paths"):
+            for path in configParse.options("ignore_paths"):
                 config.ignores.append(path)
     else:
-        print("Failed to read config file '{}'".format(args['config']))
+        print("Failed to read config file '{}'".format(args["config"]))
         exit(1)
 
     # Get the command line arg
@@ -68,22 +69,20 @@ def main(args):
         apps_to_backup.discard(app_name)
 
     # build filefilters
-    if config.method == 'base':
+    if config.method == "base":
         file_filter = filefilters.BaseFilter(config=config)
-    elif config.method == 'symlink':
+    elif config.method == "symlink":
         file_filter = filefilters.SymlinkFilter(config=config)
-    elif config.method == 'command':
+    elif config.method == "command":
         file_filter = filefilters.CommandFilter(config=config)
     else:
         raise Exception("Unrecognised method: {}!".format(config.method))
 
-    os.chdir(os.path.expanduser('~'))
+    os.chdir(os.path.expanduser("~"))
     # List each application
     for app_name in sorted(apps_to_backup):
         app_files = list_backupable_files(
-            files=app_db.get_files(app_name),
-            config=config,
-            file_filter=file_filter
+            files=app_db.get_files(app_name), config=config, file_filter=file_filter
         )
         # We skip if none of the file exists (assume not installed), or verbose level >= 3
         app_not_installed = all(f[0] is Status.NOT_EXISTS for f in app_files)
@@ -91,23 +90,35 @@ def main(args):
             continue
         lines = []
         for b_file in sorted(app_files):
-            if args['minimal']:
+            if args["minimal"]:
                 if b_file[0] is Status.BACKUP_ABLE:
                     print(b_file[1])
             # verbosity level 1 includes backuped file, level 2 includes non existing files
-            elif (b_file[0] is Status.BACKUP_ABLE
-                  or b_file[0] is Status.BROKEN_LINK
-                  or config.verbosity >= 1 and b_file[0] is Status.EXISTS
-                  or config.verbosity >= 2 and b_file[0] is Status.NOT_EXISTS):
+            elif (
+                b_file[0] is Status.BACKUP_ABLE
+                or b_file[0] is Status.BROKEN_LINK
+                or config.verbosity >= 1
+                and b_file[0] is Status.EXISTS
+                or config.verbosity >= 2
+                and b_file[0] is Status.NOT_EXISTS
+            ):
                 if app_not_installed:
                     # switch the status if this app is not something we care much
                     b_file[0] = Status.NOT_INSTALLED
                 formatted_status = fmt_status(b_file)
-                lines.append(" >> {:<22}: {:<20}".format(
-                    formatted_status[0], formatted_status[1]))
+                lines.append(
+                    " >> {:<22}: {:<20}".format(
+                        formatted_status[0], formatted_status[1]
+                    )
+                )
         if len(lines) > 0:
-            print("[ {} ]".format(ColorFormatCodes.BOLD + app_db.get_name(
-                app_name) + ColorFormatCodes.NORMAL))
+            print(
+                "[ {} ]".format(
+                    ColorFormatCodes.BOLD
+                    + app_db.get_name(app_name)
+                    + ColorFormatCodes.NORMAL
+                )
+            )
             print("\n".join(lines))
 
 
@@ -117,16 +128,19 @@ class ApplicationsDatabase(object):
     def __init__(self, conf):
         # main apps dir
         config_files = []
-        for _apps_dir in conf.apps_dir.split(','):
+        for _apps_dir in conf.apps_dir.split(","):
             # clean white space
             _apps_dir = _apps_dir.strip()
             apps_dir = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), _apps_dir)
-            config_files.extend([
-                os.path.join(apps_dir, filename)
-                for filename in os.listdir(apps_dir)
-                if filename.endswith('.cfg')
-            ])
+                os.path.dirname(os.path.realpath(__file__)), _apps_dir
+            )
+            config_files.extend(
+                [
+                    os.path.join(apps_dir, filename)
+                    for filename in os.listdir(apps_dir)
+                    if filename.endswith(".cfg")
+                ]
+            )
         # Build the dict that will contain the properties of each application
         self.apps = dict()
         for config_file in set(config_files):
@@ -137,49 +151,54 @@ class ApplicationsDatabase(object):
                 # Get the filename without the directory name
                 filename = os.path.basename(config_file)
                 # The app name is the cfg filename with the extension
-                app_name = filename[:-len('.cfg')]
+                app_name = filename[: -len(".cfg")]
                 # Start building a dict for this app
                 self.apps[app_name] = dict()
                 # Add the fancy name for the app, for display purpose
-                app_pretty_name = config.get('application', 'name')
-                self.apps[app_name]['name'] = app_pretty_name
+                app_pretty_name = config.get("application", "name")
+                self.apps[app_name]["name"] = app_pretty_name
                 # Add the configuration files
-                self.apps[app_name]['configuration_files'] = set()
-                if config.has_section('configuration_files'):
-                    for path in config.options('configuration_files'):
-                        if path.startswith('/'):
-                            raise ValueError('Unsupported absolute path: {}'
-                                             .format(path))
-                        self.apps[app_name]['configuration_files'].add(path)
+                self.apps[app_name]["configuration_files"] = set()
+                if config.has_section("configuration_files"):
+                    for path in config.options("configuration_files"):
+                        if path.startswith("/"):
+                            raise ValueError(
+                                "Unsupported absolute path: {}".format(path)
+                            )
+                        self.apps[app_name]["configuration_files"].add(path)
                 # Add the XDG configuration files
-                xdg_config_home = os.environ.get('XDG_CONFIG_HOME')
+                xdg_config_home = os.environ.get("XDG_CONFIG_HOME")
                 if xdg_config_home:
                     if not os.path.exists(xdg_config_home):
-                        raise ValueError('$XDG_CONFIG_HOME: {} does not exist'
-                                         .format(xdg_config_home))
-                    home = os.path.expanduser('~/')
+                        raise ValueError(
+                            "$XDG_CONFIG_HOME: {} does not exist".format(
+                                xdg_config_home
+                            )
+                        )
+                    home = os.path.expanduser("~/")
                     if not xdg_config_home.startswith(home):
-                        raise ValueError('$XDG_CONFIG_HOME: {} must be '
-                                         'somewhere within your home '
-                                         'directory: {}'.format(
-                                             xdg_config_home, home))
-                    if config.has_section('xdg_configuration_files'):
-                        for path in config.options('xdg_configuration_files'):
-                            if path.startswith('/'):
-                                raise ValueError('Unsupported absolute path: '
-                                                 '{}'.format(path))
+                        raise ValueError(
+                            "$XDG_CONFIG_HOME: {} must be "
+                            "somewhere within your home "
+                            "directory: {}".format(xdg_config_home, home)
+                        )
+                    if config.has_section("xdg_configuration_files"):
+                        for path in config.options("xdg_configuration_files"):
+                            if path.startswith("/"):
+                                raise ValueError(
+                                    "Unsupported absolute path: " "{}".format(path)
+                                )
                             path = os.path.join(xdg_config_home, path)
-                            path = path.replace(home, '')
-                            (self.apps[app_name]['configuration_files']
-                             .add(path))
+                            path = path.replace(home, "")
+                            (self.apps[app_name]["configuration_files"].add(path))
 
     def get_name(self, name):
         """Return the fancy name of an application."""
-        return self.apps[name]['name']
+        return self.apps[name]["name"]
 
     def get_files(self, name):
         """Return the list of config files of an application."""
-        return self.apps[name]['configuration_files']
+        return self.apps[name]["configuration_files"]
 
     def get_app_names(self):
         """Return application names."""

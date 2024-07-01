@@ -1,5 +1,6 @@
 import os
 
+
 class Status:
     BACKUP_ABLE = "Backup-able"
     EXISTS = "Backup-ed"
@@ -8,10 +9,10 @@ class Status:
     BROKEN_LINK = "WARNING: Broking link. You might want to fix it"
 
 
-class Configuration():
+class Configuration:
     def __init__(self):
         self.apps_dir = None
-        self.method = 'base'
+        self.method = "base"
         self.command = None
         self.symlink_dir = None
         self.ignores = []
@@ -31,7 +32,7 @@ class ColorFormatCodes:
     RESET = "\033[0;0m"
     BOLD = "\033[;1m"
     REVERSE = "\033[;7m"
-    NORMAL = '\033[0m'
+    NORMAL = "\033[0m"
 
 
 ############################################################
@@ -40,7 +41,7 @@ class ColorFormatCodes:
 
 
 def prefix_home_path(filename):
-    return os.path.join(os.environ['HOME'], filename)
+    return os.path.join(os.environ["HOME"], filename)
 
 
 def is_actual_file(filepath):
@@ -68,7 +69,7 @@ def fmt_status(file_status):
         Status.EXISTS: ColorFormatCodes.BLUE,
         Status.NOT_EXISTS: ColorFormatCodes.MAGENTA,
         Status.NOT_INSTALLED: ColorFormatCodes.BROWN,
-        Status.BROKEN_LINK: ColorFormatCodes.RED
+        Status.BROKEN_LINK: ColorFormatCodes.RED,
     }.get(file_status[0], ColorFormatCodes.NORMAL)
     return [col + s + ColorFormatCodes.NORMAL for s in file_status]
 
