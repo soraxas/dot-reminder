@@ -21,12 +21,14 @@ class CommandFilter(BaseFilter):
 
     def __init__(self, **kwargs):
         super(CommandFilter, self).__init__(**kwargs)
-        out = subprocess.check_output(
-            self.config.command.split(), cwd=os.path.expanduser("~")
-        )
-        self.tracked = bytes.decode(out).split()
-        # using set is faster in the long run
-        self.tracked = set(self.tracked)
+        out = subprocess.run(
+            self.config.command,
+            shell=True,
+            cwd=os.path.expanduser("~"),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        ).stdout
+        self.tracked = set(out.decode().split())
 
     def get_status(self, filename):
         home_filepath = prefix_home_path(filename)

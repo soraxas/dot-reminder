@@ -17,6 +17,12 @@ except AttributeError:
     _ConfigParser = configparser.RawConfigParser
 
 
+def strip_trailing_comments(line):
+    # Use regex to match the line and remove trailing hash comments
+    stripped_line = re.sub(r"\s*#.*$", "", line)
+    return stripped_line.strip()
+
+
 def main(args):
     """Main function."""
     config = Configuration()
@@ -54,7 +60,8 @@ def main(args):
 
         if configParse.has_section("ignore_paths"):
             for path in configParse.options("ignore_paths"):
-                config.ignores.append(path)
+                config.ignores.append(strip_trailing_comments(path))
+
     else:
         print("Failed to read config file '{}'".format(args["config"]))
         exit(1)

@@ -11,6 +11,9 @@ SYMLINK_DIR = /home/myname/dotfiles
 # # command to execute
 # COMMAND = yadm ls-tree -r HEAD --name-only
 
+# remove prefix `.config/yaml/alt` and suffix like `##template`
+# COMMAND = yadm ls-tree -r HEAD --name-only | sed -e 's:##[^/]*$::' -e 's:.config/yadm/alt/::'
+
 
 [ignore_paths]
 .atom/*
