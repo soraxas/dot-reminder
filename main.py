@@ -215,6 +215,20 @@ class ApplicationsDatabase(object):
         return app_names
 
 
+def get_status(config, file_filter, filename):
+    # check for backuped files given from pipe:
+    if filename in config.backuped_files:
+        return Status.EXISTS
+
+    # If the file exists and is not already a link pointing to Original file
+    # if its an empty directory, we ignore it (as git does not track empty directories)
+    if os.path.isdir(filename) and not os.listdir(filename):
+        return Status.EXISTS
+
+    # If the file exists and is not already a link pointing to Original file
+    return file_filter.get_status(filename)
+
+
 def list_backupable_files(files, config, file_filter):
     """
     Backup the application config files.
@@ -237,17 +251,7 @@ def list_backupable_files(files, config, file_filter):
                 if any(re.match(ignore, filename) for ignore in config.ignores):
                     continue
 
-                status = None
-                # check for backuped files given from pipe:
-                if filename in config.backuped_files:
-                    status = Status.EXISTS
-
-                # If the file exists and is not already a link pointing to Original file
-                if status is None:
-                    status = file_filter.get_status(filename)
-
-                if status is None:
-                    status = Status.NOT_EXISTS
+                status = get_status(config, file_filter, filename)
 
                 backupable_files.append([status, filename])
     return backupable_files
