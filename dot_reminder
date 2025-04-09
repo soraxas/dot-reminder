@@ -25,6 +25,11 @@ def handle_args():
         help="Minimal in verbosity. If set, it will only output directory that "
         "are backup-able. It overrides verbosity option.")
     parser.add_argument(
+        "--force-update-mackup-configs",
+        action='store_true',
+        default=False,
+        help="Remove existing mackup configs, and download the latest one.")
+    parser.add_argument(
         "--verbosity",
         "-v",
         action='count',
@@ -106,4 +111,10 @@ if __name__ == '__main__':
     mackup_configs_download_helper()
     xdg_util_download_helper()
     args = handle_args()
-    main.main(args)
+
+    if args['force_update_mackup_configs']:
+        import shutil
+        shutil.rmtree('applications')
+        mackup_configs_download_helper()
+    else:
+        main.main(args)
