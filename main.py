@@ -215,7 +215,7 @@ class ApplicationsDatabase(object):
         return app_names
 
 
-def get_status(config, file_filter, filename):
+def get_status_helper(config, file_filter, filename):
     # check for backuped files given from pipe:
     if filename in config.backuped_files:
         return Status.EXISTS
@@ -229,6 +229,18 @@ def get_status(config, file_filter, filename):
     return file_filter.get_status(filename)
 
 
+def expand_file_pattern(file_pattern):
+    """
+    Given a file pattern, expand it to a list of files.
+    If the list of files contains directories, expand them to a list of files.
+    """
+    if os.path.isfile(file_pattern):
+        yield file_pattern
+    elif os.path.isdir(file_pattern):
+        for file in glob.glob(f"{file_pattern}/**"):
+            yield from expand_file_pattern(file)
+
+
 def list_backupable_files(files, config, file_filter):
     """
     Backup the application config files.
@@ -240,18 +252,12 @@ def list_backupable_files(files, config, file_filter):
         for filename_pattern in glob.glob(potential_file):
             # check to see if the file is a directory or file
             # if it is a directory, expand it.
-            files_on_system = (
-                [filename_pattern]
-                if os.path.isfile(filename_pattern)
-                else list(glob.glob(f"{filename_pattern}/**"))
-            )
-
-            for filename in files_on_system:
+            for filename in expand_file_pattern(filename_pattern):
                 # ignore the user defined files
                 if any(re.match(ignore, filename) for ignore in config.ignores):
                     continue
 
-                status = get_status(config, file_filter, filename)
+                status = get_status_helper(config, file_filter, filename)
 
                 backupable_files.append([status, filename])
     return backupable_files
